@@ -1,0 +1,6 @@
+# specific
+*.ini
+*.log
+
+# ide
+.idea/
