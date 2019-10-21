@@ -31,11 +31,11 @@ class WueCampus:
     def run(self):
         """General process"""
         self.login()
-        # semesters = self.get_course_ids()
+        semesters = self.get_course_ids()
 
         # only use most recent available semester
-        # for course in semesters[0][1]:
-            # self.download(course[0], [semesters[0][0], course[1]])
+        for course in semesters[0][1]:
+            self.download(course[0], [semesters[0][0], course[1]])
 
         self.logout()
 
@@ -120,7 +120,8 @@ class WueCampus:
 
                     # download each resource if it does not exist already
                     for link in links:
-                        # if "href" in link.attrs: print(course_path + link.attrs["href"].split("/")[-1])
+                        # if "href" in link.attrs:
+                        # print(course_path + link.attrs["href"].split("/")[-1])
                         if "href" in link.attrs and (".pdf" or ".zip") in link.attrs["href"] and not os.path.exists(course_path + link.attrs["href"].split("/")[-1]):
                             file = self.session.get(link.attrs["href"])
                             logging.info("Downloading file to " + course_path + link.attrs["href"].split("/")[-1])
