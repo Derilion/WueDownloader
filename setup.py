@@ -11,7 +11,7 @@ setuptools.setup(
     description="A small script to download current course files",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/derilion/sampleproject",
+    url="https://github.com/Derilion/WueDownloader",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
