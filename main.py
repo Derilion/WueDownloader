@@ -24,6 +24,7 @@ class WueCampus:
         self. user = user
         self.password = pw
         self.base_path = path
+        self.logged_in = False
 
     def __del__(self):
         self.logout()
@@ -41,6 +42,7 @@ class WueCampus:
 
     def login(self):
         """login to moodle"""
+        self.logged_in = True
         login_url = self.url + "/moodle/login/index.php"
         self.session = requests.Session()
         result = self.session.get(login_url)
@@ -131,6 +133,10 @@ class WueCampus:
 
     def logout(self):
         """Logs out"""
+        if not self.logged_in:
+            return
+
+        self.logged_in = False
 
         # load page info
         page = self.session.get(self.url + "/moodle/")
@@ -189,10 +195,9 @@ if __name__ == "__main__":
             logging.basicConfig(filename="downloader.log", level=logging.INFO,
                                 format='%(asctime)s : %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
             logging.info("Starting Downloader")
-            while True:
-                downloader.run()
-                logging.info("Download Cycle Completed")
-                time.sleep(int(options[4]))
+            downloader.run()
+            logging.info("Download Cycle Completed")
+
         except KeyboardInterrupt:
             downloader.__del__()
             logging.info("Stopped Downloader")
