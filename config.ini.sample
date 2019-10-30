@@ -1,0 +1,9 @@
+[General]
+User = s999999
+Password = SomePassword
+BaseURL = https://wuecampus2.uni-wuerzburg.de
+TargetDir = ./
+
+[Logging]
+LogPath = downloader.log
+LogLevel = Info

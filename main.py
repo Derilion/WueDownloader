@@ -147,7 +147,7 @@ class WueCampus:
 
         # send logout
         self.session.get(self.url + "/moodle/login/logout.php" + "?sesskey=" + token)
-        logging.info("Logged out successfully")
+        logging.debug("Logged out successfully")
 
 
 def get_config(config_path: str = "./config.ini"):
@@ -160,8 +160,8 @@ def get_config(config_path: str = "./config.ini"):
     password = get_option(ini_parser, "General", "Password")
     base_url = get_option(ini_parser, "General", "BaseURL")
     target_dir = get_option(ini_parser, "General", "TargetDir")
-    checkup_interval = get_option(ini_parser, "General", "Interval")
     log_path = get_option(ini_parser, "General", "LogPath")
+    log_level = get_option(ini_parser, "Logging", "LogLevel")
 
     # set default values
     if (user or password) is None:
@@ -171,11 +171,9 @@ def get_config(config_path: str = "./config.ini"):
         base_url = WUECAMPUSURL
     if target_dir is None:
         target_dir = BASEPATH
-    if checkup_interval is None:
-        checkup_interval = CHECKUPTIME
     if log_path is None:
         log_path = LOGPATH
-    return [user, password, base_url, target_dir, checkup_interval, log_path]
+    return [user, password, base_url, target_dir, log_path, log_level]
 
 
 def get_option(parser, section, option):
@@ -194,10 +192,10 @@ if __name__ == "__main__":
             FORMAT = '%(asctime)-15s %(message)s'
             logging.basicConfig(filename="downloader.log", level=logging.INFO,
                                 format='%(asctime)s : %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-            logging.info("Starting Downloader")
+            logging.debug("Checking for new Files")
             downloader.run()
-            logging.info("Download Cycle Completed")
+            logging.debug("Download Cycle Completed")
 
         except KeyboardInterrupt:
             downloader.__del__()
-            logging.info("Stopped Downloader")
+            logging.debug("Stopped Downloader")
