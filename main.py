@@ -3,14 +3,14 @@
 from bs4 import BeautifulSoup as bs
 import requests
 import os
+import sys
 import configparser
-import time
 import logging
 
 WUECAMPUSURL = "https://wuecampus2.uni-wuerzburg.de/"
 BASEPATH = "./"
 LOGPATH = "downloader.log"
-CHECKUPTIME = 3600
+CWD = os.path.dirname(os.path.realpath(sys.argv[0]))
 
 
 class WueCampus:
@@ -60,7 +60,7 @@ class WueCampus:
 
         # login
         self.session.post(login_url, payload)
-        logging.info("Logged in successfully")
+        logging.debug("Logged in successfully")
 
     def get_course_ids(self) -> list:
         """Fetches a list of semesters with a sublist of courses and their moodle ids"""
@@ -129,7 +129,6 @@ class WueCampus:
                             logging.info("Downloading file to " + course_path + link.attrs["href"].split("/")[-1])
                             open(course_path + link.attrs["href"].split("/")[-1], 'wb+').write(file.content)
 
-        # print(folderlist)
 
     def logout(self):
         """Logs out"""
@@ -150,52 +149,57 @@ class WueCampus:
         logging.debug("Logged out successfully")
 
 
-def get_config(config_path: str = "./config.ini"):
+def get_config(config_path: str = os.path.join(CWD, "./config.ini")):
     """Get configuration settings"""
     ini_parser = configparser.ConfigParser()
     ini_parser.read(config_path)
+    result = dict()
 
     # read all options
-    user = get_option(ini_parser, "General", "User")
-    password = get_option(ini_parser, "General", "Password")
-    base_url = get_option(ini_parser, "General", "BaseURL")
-    target_dir = get_option(ini_parser, "General", "TargetDir")
-    log_path = get_option(ini_parser, "General", "LogPath")
-    log_level = get_option(ini_parser, "Logging", "LogLevel")
+    result["user"] = get_option(ini_parser, "General", "User")
+    result["password"] = get_option(ini_parser, "General", "Password")
+    result["base_url"] = get_option(ini_parser, "General", "BaseURL")
+    if get_option(ini_parser, "General", "TargetDir") is not None:
+        result["target_dir"] = os.path.join(CWD, get_option(ini_parser, "General", "TargetDir"))
+    if get_option(ini_parser, "Logging", "LogPath") is not None:
+        result["log_path"] = os.path.join(CWD, get_option(ini_parser, "Logging", "LogPath"))
+    result["log_level"] = get_option(ini_parser, "Logging", "LogLevel")
 
     # set default values
-    if (user or password) is None:
+    if ("user" or "password") not in result:
         logging.error("Username or Password is missing")
         return None
-    if base_url is None:
-        base_url = WUECAMPUSURL
-    if target_dir is None:
-        target_dir = BASEPATH
-    if log_path is None:
-        log_path = LOGPATH
-    return [user, password, base_url, target_dir, log_path, log_level]
+    if "base_url" not in result:
+        result["base_url"] = WUECAMPUSURL
+    if "target_dir" not in result:
+        result["target_dir"] = os.path.join(CWD, BASEPATH)
+    if "log_path" not in result:
+        result["log_path"] = os.path.join(CWD, LOGPATH)
+    return result
 
 
 def get_option(parser, section, option):
     """Get single setting"""
     try:
         return parser.get(section, option)
-    except configparser.NoSectionError or configparser.NoOptionError:
+    except configparser.NoSectionError:
+        return None
+    except configparser.NoOptionError:
         return None
 
 
 if __name__ == "__main__":
     options = get_config()
     if options:
-        downloader = WueCampus(options[2], options[0], options[1], options[3])
+        downloader = WueCampus(options["base_url"], options["user"], options["password"], options["target_dir"])
         try:
             FORMAT = '%(asctime)-15s %(message)s'
-            logging.basicConfig(filename="downloader.log", level=logging.INFO,
-                                format='%(asctime)s : %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-            logging.debug("Checking for new Files")
+            logging.basicConfig(filename=options["log_path"], level=logging.INFO,
+                                format='%(asctime)s : %(message)s', datefmt='%Y-%m-%d %H:%M:%S', filemode='w')
+            logging.debug("Running with following Configuration: " + str(options))
             downloader.run()
-            logging.debug("Download Cycle Completed")
+            logging.info("Download Cycle Completed")
 
         except KeyboardInterrupt:
             downloader.__del__()
-            logging.debug("Stopped Downloader")
+            logging.error("Hard exit of the downloader by manual interrupt")
